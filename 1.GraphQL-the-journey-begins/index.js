@@ -1,7 +1,9 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import typeDefs from "./schema.js";
-import { games, authors, reviews } from "./db.js";
+import db from "./db.js";
+
+const { games, reviews, authors } = db;
 
 const resolvers = {
   Query: {
@@ -40,6 +42,29 @@ const resolvers = {
     },
     game(parent) {
       return games.find((g) => g.id === parent.author_id);
+    },
+  },
+  Mutation: {
+    deleteGame(_, args) {
+      db.games = db.games.filter((g) => g.id !== args.id);
+      return db.games;
+    },
+    addGame(_, args) {
+      let game = {
+        ...args.game,
+        id: Math.floor(Math.random() * 10000).toString(),
+      };
+      db.games.push(game);
+      return game;
+    },
+    updateGame(_, args) {
+      db.games = db.games.map((g) => {
+        if (g.id === args.id) {
+          return { ...g, ...args.edits };
+        }
+        return g;
+      });
+      return db.games.find((g) => g.id === args.id);
     },
   },
 };
